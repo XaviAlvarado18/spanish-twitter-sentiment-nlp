@@ -1,0 +1,137 @@
+---
+title: "🐦 Twitter Sentiment Analysis in Spanish Tweets"
+subtitle: "Pipeline de Análisis de Sentimiento"
+author: |
+  - Kristopher Javier Alvarado López (Carné: 21188)  
+  - Emilio Jose Solano Orozco (Carné: 21212)
+format: 
+  revealjs:
+    theme: solarized
+    transition: fade
+    slide-number: true
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## 📋 Objetivos
+
+- Analizar tweets en español.  
+- Preprocesar texto con NLP (tokenización, lematización, limpieza).  
+- Representar el texto con **BoW** y **TF-IDF**.  
+- Aplicar modelos de Machine Learning para clasificación de sentimientos.  
+- Evaluar y visualizar resultados.
+
+## 📂 1. Carga de Datos
+
+```{r}
+library(readr)
+df <- read_csv("data/sentiment_analysis_dataset.csv")
+head(df)
+
+
+
+```
+## 🛠️ 2. Preprocesamiento del Corpus
+
+Pasos realizados:
+
+1. Eliminación de columna *sentiment*.  
+2. Normalización de texto (minúsculas, eliminación de símbolos).  
+3. Tokenización y stopwords en español.  
+4. Lematización con **stanza**.  
+
+💡 Aquí se aplicó también similitud de Levenshtein para limpieza de palabras.
+
+
+## ✍️ 3. Representación del Texto
+
+- Bolsa de Palabras (BoW)  
+- TF-IDF  
+- BETO embeddings (transformer en español)
+
+```{r}
+library(tm)
+library(SnowballC)
+
+# Corpus en R
+corpus <- Corpus(VectorSource(df$text))
+tdm <- TermDocumentMatrix(corpus,
+                         control = list(weighting = weightTfIdf))
+inspect(tdm[1:10, 1:10])
+```
+
+## 🔍 Resultados Visuales - BoW y TF-IDF con PCA
+
+
+![](output_bow.png){width=70%}
+
+En la representación con BoW (izquierda) los puntos quedan muy dispersos y no muestran una estructura clara → la información semántica es limitada. Con TF-IDF (derecha), se observa una mejor diferenciación, pero aún los clusters se superponen mucho.
+
+
+## 🔍 Resultados Visuales - BETO embeddings con PCA
+
+:::{.center}
+![](output_beto.png){width=27%}
+:::
+
+
+Con BETO embeddings los datos presentan una distribución más compacta y con mayor coherencia semántica, reflejando mejor las relaciones entre tweets. Esto confirma que los modelos de lenguaje basados en transformers en español (como BETO) superan a BoW/TF-IDF en tareas de análisis de sentimiento.
+
+## 🤖 4. Modelo avanzado
+
+Modelos probados en Python (integración con `reticulate`):
+
+```{python, eval=FALSE}
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import classification_report
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+model = MultinomialNB()
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+print(classification_report(y_test, y_pred))
+```
+
+<div style="display: flex; justify-content: center; gap: 20px;">
+
+<img src="output_naive.png" width="45%">
+<img src="output_svm.png" width="45%">
+
+</div>
+
+
+## 📊 5. Visualización de Resultados
+
+```{r}
+library(ggplot2)
+
+ggplot(data.frame(f1=c(0.81, 0.76, 0.84),
+                  model=c("Naive Bayes","SVM","LogReg")),
+       aes(x=model, y=f1, fill=model)) +
+  geom_col() +
+  labs(title="Comparación de F1-Score por Modelo",
+       y="F1-Score", x="Modelo")
+```
+
+
+
+---
+
+
+## ✅ Conclusiones
+
+- El preprocesamiento en español es clave (stopwords + lematización).  
+- TF-IDF dio mejores resultados que BoW.  
+- El modelo con mejor desempeño fue **SVM (hipotético ejemplo)**.  
+- El pipeline puede extenderse con embeddings (Word2Vec, BERT).
+
+
+
+## 🙌 Gracias
+
+Autores:  
+- Kristopher Javier Alvarado López  
+- Emilio Jose Solano Orozco  
