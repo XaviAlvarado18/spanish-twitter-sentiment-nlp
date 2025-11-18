@@ -1,0 +1,76 @@
+---
+title: "Análisis de Tweets en Español con RNN, LSTM y Seq2Seq"
+format: revealjs
+---
+
+## Introducción
+
+- Análisis de tweets en español.
+- Objetivo: construir modelos de PLN basados en **RNN**, **LSTM** y **Seq2Seq**.
+- Flujo general:
+  1. Limpieza del texto  
+  2. Tokenización  
+  3. Vectorización  
+  4. Construcción de modelos  
+  5. Evaluación  
+
+---
+
+## Carga y Exploración de Datos
+
+```python
+import pandas as pd
+
+# Cargar dataset
+df = pd.read_csv("dataset.csv")
+print("Tamaño del dataset:", df.shape)
+df.head()
+```python
+
+- Se carga un dataset de tweets en español.
+- Se inspecciona su estructura y se visualizan ejemplos.
+
+
+Limpieza del Texto
+```python
+import re
+
+def clean_text(text):
+    # Ejemplo: eliminar URLs, menciones y caracteres no alfabéticos
+    text = re.sub(r"http\\S+", "", text)
+    text = re.sub(r"@[A-Za-z0-9_]+", "", text)
+    text = re.sub(r"[^a-zA-ZáéíóúÁÉÍÓÚñÑ ]", " ", text)
+    return text.lower().strip()
+
+df["clean_text"] = df["text"].astype(str).apply(clean_text)
+df[["text", "clean_text"]].head(10)
+```
+
+- Normalización del texto.
+
+- Eliminación de ruido común en tweets.
+
+- Conversión a minúsculas y limpieza básica.
+
+
+Tokenización y Vectorización
+
+- Construcción del vocabulario.
+
+- Tokenización de oraciones.
+
+- Transformación a secuencias numéricas.
+
+```python
+from collections import Counter
+import numpy as np
+
+# Construcción del vocabulario (ejemplo)
+vocab = Counter(" ".join(df["clean_text"]).split())
+word2idx = {w:i+1 for i, (w,_) in enumerate(vocab.most_common())}
+
+def encode_sentence(sentence):
+    return [word2idx.get(w, 0) for w in sentence.split()]
+
+encoded = [encode_sentence(t) for t in df["clean_text"]]
+```
